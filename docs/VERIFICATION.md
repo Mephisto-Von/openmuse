@@ -27,6 +27,12 @@ September 16, 2026 · Capybara and distinct mobile/web demos, following the agen
 - Inspected from that run: macOS archives keep Electron's framework symlinks as links and
   contain 582 entries with no `node_modules`; the DMG is a real zlib DMG; both Windows
   executables are PE32 GUI binaries; artifact names match the published v0.1.0 assets.
+- The `browser-container` job was returning an intermittent `500 WORKER_FAILURE` from
+  `GET /sessions/:id/downloads`. Listing the download store read every `*.json` entry
+  unguarded, so a capture that cleared its journal entry after `readdir` failed the whole
+  request while a client was polling. Both listings now skip entries that disappear or
+  cannot be parsed, which was confirmed directly against a directory holding a valid, a
+  truncated, and an unreadable entry (only the valid one is returned).
 - Not exercised: signed or notarized builds. No Developer ID certificate, Windows
   code-signing certificate, or Play upload key exists in this environment, so the signing
   and notarization steps are configuration only.
