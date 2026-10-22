@@ -30,6 +30,7 @@
   "build": {
     "appId": "app.openmuse.desktop",
     "productName": "OpenMuse",
+    "executableName": "openmuse",
     "copyright": "Copyright © 2026 CopilotKit",
     "asar": true,
     "directories": {
