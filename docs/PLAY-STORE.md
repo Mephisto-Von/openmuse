@@ -61,9 +61,23 @@ Increment `expo.android.versionCode` for every upload; Play rejects a repeated c
   GitHub Pages, and paste that URL. A raw GitHub link works for review but is not a
   substitute for a page you control.
 - **Graphics:** `store/play/icon-512.png` (512×512) and
-  `store/play/feature-graphic-1024x500.png` (1024×500). Phone screenshots (2–8, 16:9 to
-  9:16) still need to be captured from a device; the demo recording is landscape and is not
-  accepted as a phone screenshot.
+  `store/play/feature-graphic-1024x500.png` (1024×500).
+- **Phone screenshots:** four at 1080×1920 (9:16) in `store/play/screenshots/`, which is
+  inside Play's 2–8 images, 16:9–9:16, 320–3840 px rules:
+
+  | File | Screen |
+  | --- | --- |
+  | `01-mail.png` | Mail list with the sample inbox |
+  | `02-activity.png` | Activity, reviews and the workspace timeline |
+  | `03-goals.png` | Goals with tracking and the goal categories |
+  | `04-apps.png` | Apps, connections and on-device capabilities |
+
+  These are the product's real UI at a phone viewport with the sample workspace, not
+  marketing mockups. They were rendered from the app's Expo web build against a local
+  sample-mode server (`WORKSPACE_MODE=sample`), because the published APK contains only
+  `arm64-v8a` libraries and cannot run on an x86_64 emulator. The chat screen is absent: the
+  CopilotKit runtime needs a real Intelligence key, which this environment does not have.
+  Re-shoot on a device if the listing should show the Android status bar.
 
 ## App access (required for review)
 
@@ -129,7 +143,6 @@ publish a build with Google OAuth, you also need a verified OAuth consent screen
 ## Still blocking a public Play release
 
 - A reachable review server with demo data (see **App access**).
-- Phone screenshots.
 - A publicly hosted privacy policy URL.
 - Store listing review of the "requires your own server" positioning: Play accepts
   self-hosted tools, but the listing must say so in the first paragraph.
