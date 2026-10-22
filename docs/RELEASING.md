@@ -18,8 +18,10 @@ the release at the dispatched commit when the tag is missing.
 
 ## Secrets
 
-Add these under **Settings → Secrets and variables → Actions**. Every one is optional; the
-workflow warns and ships unsigned artifacts when a platform's secrets are absent.
+Add these under **Settings → Secrets and variables → Actions**. The macOS and Windows sets
+are optional: without them the workflow warns and ships unsigned artifacts. The Android
+keystore set is required for a real tag, because a build signed with a different key can
+never replace an installed app; only a `dry_run` falls back to the debug keystore.
 
 | Secret | Platform | Purpose |
 | --- | --- | --- |
@@ -68,6 +70,19 @@ by setting `win.azureSignOptions` instead of `CSC_LINK`.
 injected-signing properties, so no signing block is committed and `apps/mobile/android/` can
 stay generated and ignored. If Play App Signing is enabled, this keystore becomes the upload
 key and Google re-signs the distributed build.
+
+## What the pipeline has actually been run with
+
+On October 22, 2026 the workflow was exercised on a scratch tag with no signing secrets: the
+Linux, Windows, and macOS jobs built and uploaded their artifacts, `publish` waited on them
+and then stopped at the version guard, and the Android job stopped with an explicit
+"keystore not set" error instead of shipping a debug-signed build. The macOS `tar.gz`
+preserved Electron's framework symlinks (582 entries, no `node_modules`), the DMG and both
+Windows executables built, and no release was created or modified.
+
+Signed builds have not been exercised: no Developer ID, code-signing certificate, or Google
+Play upload key was available. The signing steps are configuration, not verified behavior,
+until a real certificate runs through them.
 
 ## Verifying a release locally
 

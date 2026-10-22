@@ -11,6 +11,26 @@ September 16, 2026 · Capybara and distinct mobile/web demos, following the agen
 - The **real Docker computer smoke test passes** against the isolated `colima-openmuse` context: local image build, nonroot commands, read-only system files, disabled network, capped output, text editing, symlink rejection, PDF byte-preserving import/export, stop/start file persistence, and interruption of an actually running command. Its disposable container and volume are removed after the test.
 - CI now includes a separate computer-container build/smoke job. Its YAML parses with unique keys and valid workflow triggers. The existing browser-container CI job was not rerun locally for this release; remote CI results remain separate from these local checks.
 
+## Release pipeline verification
+
+- All seven CI jobs pass on `main` on GitHub's runners, including `browser` and
+  `browser-container`, which had been failing because example.com stopped rendering its
+  "Example Domain" heading in the page body. Both assertions now accept the heading or the
+  sentence the site currently serves, so they test page reading rather than one revision of
+  a third-party page.
+- `.github/workflows/release.yml` was run on a scratch tag with no signing secrets. Linux
+  (AppImage + deb), Windows (NSIS setup + portable), and macOS (DMG + `tar.gz` for x64 and
+  arm64) all built on their own runners and uploaded artifacts; `publish` waited for them
+  and refused the tag because it did not match the packaged version. The Android job refused
+  to build without the upload keystore rather than shipping a debug-signed APK. No release
+  was created or altered, and the scratch tags were deleted.
+- Inspected from that run: macOS archives keep Electron's framework symlinks as links and
+  contain 582 entries with no `node_modules`; the DMG is a real zlib DMG; both Windows
+  executables are PE32 GUI binaries; artifact names match the published v0.1.0 assets.
+- Not exercised: signed or notarized builds. No Developer ID certificate, Windows
+  code-signing certificate, or Play upload key exists in this environment, so the signing
+  and notarization steps are configuration only.
+
 ## Agent browser verification
 
 - September 16: fresh native iPhone capture exercised Hacker News → CopilotKit → takeover and scrolling. A separate desktop capture exercised actual mailbox search/read → full email viewer → Monterey Bay Aquarium research → takeover. Browser results came from real Chromium; email came from the isolated fictional mailbox. The web capture reported no page errors. Live model and Google-account acceptance remain outside this recording.
