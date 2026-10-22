@@ -140,11 +140,16 @@ jobs:
       - uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa # v4
       - run: pnpm install --frozen-lockfile
       - name: Build Windows installers
+        shell: bash
         env:
           CSC_LINK: ${{ secrets.WINDOWS_CERTIFICATE_P12 }}
           CSC_KEY_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
           NODE_ENV: production
-        run: pnpm --dir apps/desktop run dist:win
+        run: |
+          # An empty CSC_LINK is not the same as an absent one: electron-builder reads
+          # it as a path and fails on the project directory.
+          if [ -z "$CSC_LINK" ]; then unset CSC_LINK CSC_KEY_PASSWORD; fi
+          pnpm --dir apps/desktop run dist:win
       - name: Report signing state
         shell: bash
         env:
@@ -183,7 +188,11 @@ jobs:
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           NODE_ENV: production
-        run: pnpm --dir apps/desktop exec electron-builder --mac dmg tar.gz --x64 --arm64
+        run: |
+          # An empty CSC_LINK is not the same as an absent one: electron-builder reads
+          # it as a path and fails on the project directory.
+          if [ -z "$CSC_LINK" ]; then unset CSC_LINK CSC_KEY_PASSWORD; fi
+          pnpm --dir apps/desktop exec electron-builder --mac dmg tar.gz --x64 --arm64 --publish never
       - name: Verify signature and gatekeeper assessment
         env:
           CERT: ${{ secrets.MAC_CERTIFICATE_P12 }}

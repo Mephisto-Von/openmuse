@@ -9,12 +9,14 @@ const root = path.resolve(desktopDirectory, "../..");
 const webDist = path.join(root, "apps/mobile/dist/web");
 const rendererDirectory = path.join(desktopDirectory, "renderer");
 
-// Node does not apply PATHEXT when spawning, so Windows needs the .cmd shim explicitly.
-const pnpm = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
+// Node refuses to spawn a .cmd shim without a shell, and does not apply PATHEXT itself.
+const windows = process.platform === "win32";
+const pnpm = windows ? "pnpm.cmd" : "pnpm";
 
 if (process.env.OPENMUSE_SKIP_WEB_BUILD !== "1") {
   const result = spawnSync(pnpm, ["--dir", "apps/mobile", "build:web"], {
     cwd: root,
+    shell: windows,
     stdio: "inherit",
     env: {
       ...process.env,

@@ -17,9 +17,9 @@
   "scripts": {
     "start": "node scripts/prepare.mjs && electron .",
     "prepare:web": "node scripts/prepare.mjs",
-    "dist:linux": "node scripts/prepare.mjs && electron-builder --linux AppImage deb",
-    "dist:win": "node scripts/prepare.mjs && electron-builder --win nsis portable",
-    "dist:mac": "node scripts/prepare.mjs && electron-builder --mac dmg tar.gz",
+    "dist:linux": "node scripts/prepare.mjs && electron-builder --linux AppImage deb --publish never",
+    "dist:win": "node scripts/prepare.mjs && electron-builder --win nsis portable --publish never",
+    "dist:mac": "node scripts/prepare.mjs && electron-builder --mac dmg tar.gz --publish never",
     "dist:mac:unsigned": "node scripts/prepare.mjs && node scripts/package-mac.mjs"
   },
   "devDependencies": {
