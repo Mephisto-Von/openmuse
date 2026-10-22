@@ -1,10 +1,10 @@
-import { packager } from "@electron/packager";
+import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { createReadStream } from "node:fs";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
-import { spawnSync } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { packager } from "@electron/packager";
 
 // electron-builder cannot produce a macOS .app or .dmg on Linux. This script
 // packages unsigned .app bundles with the official Electron binaries so Linux

@@ -3,14 +3,7 @@ import { stat } from "node:fs/promises";
 import { createServer } from "node:http";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import {
-  app,
-  BrowserWindow,
-  dialog,
-  Menu,
-  session,
-  shell,
-} from "electron";
+import { app, BrowserWindow, dialog, Menu, session, shell } from "electron";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rendererDirectory = path.join(__dirname, "..", "renderer");
@@ -102,7 +95,9 @@ function startStaticServer() {
       response.end();
       return;
     }
-    createReadStream(file).on("error", () => response.destroy()).pipe(response);
+    createReadStream(file)
+      .on("error", () => response.destroy())
+      .pipe(response);
   });
 
   return new Promise((resolve, reject) => {

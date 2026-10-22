@@ -32,13 +32,7 @@ import {
   IdeasScreen,
 } from "./src/agent-ui";
 import { AgentWorkspaceProvider, useAgentWorkspace } from "./src/agent-workspace";
-import {
-  createSession,
-  getApiUrl,
-  loadStoredApiUrl,
-  MuseApi,
-  saveApiUrl,
-} from "./src/api";
+import { createSession, getApiUrl, loadStoredApiUrl, MuseApi, saveApiUrl } from "./src/api";
 import { ChatScreen, WorkspaceTools } from "./src/chat";
 import { ComputerEntry } from "./src/computer";
 import { ComputerDraftProvider } from "./src/computer-drafts";
@@ -160,14 +154,15 @@ export default function App() {
                   Open workspace
                 </Button>
                 <Text style={[s.small, { marginTop: 15 }]}>
-                  Point the app at your OpenMuse server. Local sample workspaces open without a
-                  key. Use HTTPS whenever the server is reachable from the public internet.
+                  Point the app at your OpenMuse server. Local sample workspaces open without a key.
+                  Use HTTPS whenever the server is reachable from the public internet.
                 </Text>
-                {/^http:\/\//i.test(serverUrl) && !/^http:\/\/(localhost|127\.0\.0\.1|10\.0\.2\.2)/i.test(serverUrl) && (
-                  <Text style={[s.small, { color: colors.danger }]}>
-                    This address is unencrypted. Anyone on the network can read the traffic.
-                  </Text>
-                )}
+                {/^http:\/\//i.test(serverUrl) &&
+                  !/^http:\/\/(localhost|127\.0\.0\.1|10\.0\.2\.2)/i.test(serverUrl) && (
+                    <Text style={[s.small, { color: colors.danger }]}>
+                      This address is unencrypted. Anyone on the network can read the traffic.
+                    </Text>
+                  )}
               </Card>
             )}
           </View>
