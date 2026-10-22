@@ -1,0 +1,237 @@
+name: Release
+
+# Tag a commit (`git tag v0.1.0 && git push --tags`) to build every platform and publish a
+# GitHub release with installers and SHA-256 checksums. Manual runs need an existing tag
+# name; the tag is created at the dispatched commit when it does not exist yet.
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag, for example v0.1.0
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.event.inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+env:
+  TAG: ${{ github.event.inputs.tag || github.ref_name }}
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
+      - uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa # v4
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - run: pnpm install --frozen-lockfile
+      - name: Prepare signing key
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          if [ -n "$ANDROID_KEYSTORE_BASE64" ]; then
+            mkdir -p "$RUNNER_TEMP/signing"
+            printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/signing/release.keystore"
+            echo "ANDROID_SIGNED=true" >> "$GITHUB_ENV"
+          else
+            echo "::warning::ANDROID_KEYSTORE_BASE64 is not set. The APK and AAB will use the debug keystore and cannot be updated in place."
+            echo "ANDROID_SIGNED=false" >> "$GITHUB_ENV"
+          fi
+      - name: Export release version
+        run: |
+          pnpm --dir apps/mobile exec expo prebuild --platform android --no-install
+          node -e 'console.log("VERSION=" + require("./apps/mobile/package.json").version)' >> "$GITHUB_ENV"
+      - name: Build APK and AAB
+        working-directory: apps/mobile/android
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS || 'openmuse' }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD || secrets.ANDROID_KEYSTORE_PASSWORD }}
+          NODE_ENV: production
+        run: |
+          chmod +x gradlew
+          args=(-PreactNativeArchitectures=arm64-v8a)
+          if [ "$ANDROID_SIGNED" = "true" ]; then
+            args+=(
+              "-Pandroid.injected.signing.store.file=$RUNNER_TEMP/signing/release.keystore"
+              "-Pandroid.injected.signing.store.password=$ANDROID_KEYSTORE_PASSWORD"
+              "-Pandroid.injected.signing.key.alias=$ANDROID_KEY_ALIAS"
+              "-Pandroid.injected.signing.key.password=$ANDROID_KEY_PASSWORD"
+            )
+          fi
+          ./gradlew assembleRelease bundleRelease "${args[@]}"
+      - name: Collect and verify Android artifacts
+        run: |
+          mkdir -p artifacts
+          cp apps/mobile/android/app/build/outputs/apk/release/app-release.apk \
+            "artifacts/OpenMuse-$VERSION-android-arm64.apk"
+          cp apps/mobile/android/app/build/outputs/bundle/release/app-release.aab \
+            "artifacts/OpenMuse-$VERSION-android-arm64.aab"
+          apksigner="$(find "$ANDROID_HOME/build-tools" -name apksigner | sort -V | tail -1)"
+          "$apksigner" verify --print-certs "artifacts/OpenMuse-$VERSION-android-arm64.apk"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: android
+          path: artifacts/OpenMuse-*
+          if-no-files-found: error
+
+  linux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
+      - uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa # v4
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --dir apps/desktop run dist:linux
+      - name: Collect artifacts
+        run: |
+          mkdir -p dist-release
+          cp artifacts/desktop/OpenMuse-*.AppImage artifacts/desktop/OpenMuse-*.deb dist-release/
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: linux
+          path: |
+            dist-release/*.AppImage
+            dist-release/*.deb
+          if-no-files-found: error
+
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
+      - uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa # v4
+      - run: pnpm install --frozen-lockfile
+      - name: Build Windows installers
+        env:
+          CSC_LINK: ${{ secrets.WINDOWS_CERTIFICATE_P12 }}
+          CSC_KEY_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+          NODE_ENV: production
+        run: pnpm --dir apps/desktop run dist:win
+      - name: Report signing state
+        shell: bash
+        env:
+          CERT: ${{ secrets.WINDOWS_CERTIFICATE_P12 }}
+        run: |
+          if [ -z "$CERT" ]; then
+            echo "::warning::WINDOWS_CERTIFICATE_P12 is not set. Installers are unsigned and will trigger SmartScreen."
+          fi
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: windows
+          path: artifacts/desktop/*.exe
+          if-no-files-found: error
+
+  macos:
+    runs-on: macos-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
+      - uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa # v4
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --dir apps/desktop run prepare:web
+      - name: Build, sign, and notarize macOS apps
+        env:
+          CSC_LINK: ${{ secrets.MAC_CERTIFICATE_P12 }}
+          CSC_KEY_PASSWORD: ${{ secrets.MAC_CERTIFICATE_PASSWORD }}
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          NODE_ENV: production
+        run: pnpm --dir apps/desktop exec electron-builder --mac dmg zip --x64 --arm64
+      - name: Verify signature and gatekeeper assessment
+        env:
+          CERT: ${{ secrets.MAC_CERTIFICATE_P12 }}
+        run: |
+          app="artifacts/desktop/mac-arm64/openmuse.app"
+          if [ -z "$CERT" ]; then
+            echo "::warning::MAC_CERTIFICATE_P12 is not set. Apps are unsigned and macOS will require a manual Gatekeeper override."
+            exit 0
+          fi
+          codesign --verify --deep --strict --verbose=2 "$app"
+          # The notarization ticket is stapled to the DMG; the extracted .app can still be
+          # assessed as "rejected" here, so treat this as a report rather than a gate.
+          spctl --assess --type execute --verbose=4 "$app" ||
+            echo "::warning::Gatekeeper assessment failed; confirm the stapled DMG opens cleanly."
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: macos
+          path: |
+            artifacts/desktop/OpenMuse-*.dmg
+            artifacts/desktop/OpenMuse-*.zip
+          if-no-files-found: error
+
+  publish:
+    needs: [android, linux, windows, macos]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          path: artifacts
+          merge-multiple: true
+      - name: Check the tag matches the packaged version
+        run: |
+          VERSION="${TAG#v}"
+          packaged="$(node -p "require('./apps/desktop/package.json').version")"
+          mobile="$(node -p "require('./apps/mobile/package.json').version")"
+          if [ "$VERSION" != "$packaged" ] || [ "$VERSION" != "$mobile" ]; then
+            echo "::error::Tag $TAG does not match desktop ($packaged) and mobile ($mobile) versions."
+            exit 1
+          fi
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+      - name: Write checksums
+        working-directory: artifacts
+        run: |
+          ls -1 OpenMuse-* | sort | xargs sha256sum > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+      - name: Create or update the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" artifacts/OpenMuse-* artifacts/SHA256SUMS.txt --clobber
+          else
+            gh release create "$TAG" artifacts/OpenMuse-* artifacts/SHA256SUMS.txt \
+              --target "$GITHUB_SHA" \
+              --title "OpenMuse $VERSION" \
+              --generate-notes
+          fi
+          gh release view "$TAG" --json assets --jq '.assets[].name'

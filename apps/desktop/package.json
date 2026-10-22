@@ -76,7 +76,10 @@
       "icon": "resources/icon.icns",
       "artifactName": "OpenMuse-${version}-macos-${arch}.${ext}",
       "hardenedRuntime": true,
-      "gatekeeperAssess": false
+      "gatekeeperAssess": false,
+      "entitlements": "resources/entitlements.mac.plist",
+      "entitlementsInherit": "resources/entitlements.mac.inherit.plist",
+      "notarize": true
     },
     "dmg": {
       "title": "OpenMuse ${version}"
