@@ -1,7 +1,7 @@
 # Releasing OpenMuse
 
 `.github/workflows/release.yml` builds the Android APK/AAB, Linux AppImage/deb, Windows
-installer/portable, and signed macOS DMG/zip on a tag, then publishes them with
+installer/portable, and signed macOS DMG/tar.gz on a tag, then publishes them with
 `SHA256SUMS.txt`. Nothing else needs to run locally.
 
 ```sh
@@ -9,6 +9,9 @@ installer/portable, and signed macOS DMG/zip on a tag, then publishes them with
 git tag v0.2.0
 git push origin v0.2.0        # or: gh workflow run Release -f tag=v0.2.0
 ```
+
+Add `-f dry_run=true` to build and upload every platform without creating or updating the
+release. Use it to check signing secrets and packaging before a real tag.
 
 The workflow fails early if the tag does not match both packaged versions. It also creates
 the release at the dispatched commit when the tag is missing.

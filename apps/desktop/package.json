@@ -19,7 +19,7 @@
     "prepare:web": "node scripts/prepare.mjs",
     "dist:linux": "node scripts/prepare.mjs && electron-builder --linux AppImage deb",
     "dist:win": "node scripts/prepare.mjs && electron-builder --win nsis portable",
-    "dist:mac": "node scripts/prepare.mjs && electron-builder --mac dmg zip",
+    "dist:mac": "node scripts/prepare.mjs && electron-builder --mac dmg tar.gz",
     "dist:mac:unsigned": "node scripts/prepare.mjs && node scripts/package-mac.mjs"
   },
   "devDependencies": {
@@ -86,7 +86,7 @@
     "mac": {
       "target": [
         "dmg",
-        "zip"
+        "tar.gz"
       ],
       "category": "public.app-category.productivity",
       "icon": "resources/icon.icns",

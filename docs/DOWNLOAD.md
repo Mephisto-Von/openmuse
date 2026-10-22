@@ -75,7 +75,7 @@ through Play.
 - The apps ship the compiled web bundle; no telemetry is sent to the OpenMuse project. The
   app talks only to the server address you enter.
 - Build them yourself from the same tag with `pnpm --dir apps/desktop run dist:linux`,
-  `dist:win`, `pnpm exec electron-builder --mac zip`, and a signed `assembleRelease`
+  `dist:win`, `dist:mac`, and a signed `assembleRelease`
   (see `artifacts/android/signing/README.md` for the injected-signing command) if you need
   artifacts you trust.
 
