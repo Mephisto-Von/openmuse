@@ -8,6 +8,7 @@ The demos follow a request from chat to the agent's inline browser, then show ho
 
 ## Guides
 
+- [Download and install](DOWNLOAD.md)
 - [Quick start and architecture](../README.md)
 - [Native iOS / Android / web setup](../apps/mobile/README.md)
 - [Browser worker, API, persistence, and network boundary](../apps/worker/README.md)
@@ -17,6 +18,7 @@ The demos follow a request from chat to the agent's inline browser, then show ho
 - [OpenBot integration contract](OPENBOT-INTEGRATION.md)
 - [Feature inventory](FEATURES.md)
 - [Verification and limitations](VERIFICATION.md)
+- [Scaling to public use](SCALE-READINESS.md)
 - [Demo reproduction](DEMO.md)
 - [Roadmap](../ROADMAP.md)
 - [Contributing](../CONTRIBUTING.md)
