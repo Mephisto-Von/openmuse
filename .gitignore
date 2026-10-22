@@ -8,6 +8,7 @@ build/
 .openmuse/
 apps/mobile/ios/
 apps/mobile/android/
+apps/desktop/renderer/
 .DS_Store
 *.tsbuildinfo
 artifacts/

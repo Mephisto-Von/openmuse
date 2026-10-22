@@ -1,0 +1,84 @@
+{
+  "name": "@openmuse/desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "OpenMuse desktop shell for Linux, macOS, and Windows",
+  "author": {
+    "name": "CopilotKit",
+    "email": "support@copilotkit.ai"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/CopilotKit/OpenMuse.git"
+  },
+  "type": "module",
+  "desktopName": "OpenMuse",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "node scripts/prepare.mjs && electron .",
+    "prepare:web": "node scripts/prepare.mjs",
+    "dist:linux": "node scripts/prepare.mjs && electron-builder --linux AppImage deb",
+    "dist:win": "node scripts/prepare.mjs && electron-builder --win nsis portable",
+    "dist:mac": "node scripts/prepare.mjs && electron-builder --mac dmg zip",
+    "dist:mac:unsigned": "node scripts/prepare.mjs && node scripts/package-mac.mjs"
+  },
+  "devDependencies": {
+    "@electron/packager": "20.3.0",
+    "electron": "45.0.0",
+    "electron-builder": "26.15.3"
+  },
+  "build": {
+    "appId": "app.openmuse.desktop",
+    "productName": "OpenMuse",
+    "copyright": "Copyright © 2026 CopilotKit",
+    "asar": true,
+    "directories": {
+      "output": "../../artifacts/desktop",
+      "buildResources": "resources"
+    },
+    "files": [
+      "src/**/*",
+      "renderer/**/*",
+      "preload.cjs",
+      "package.json",
+      "!node_modules/**/*"
+    ],
+    "linux": {
+      "target": ["AppImage", "deb"],
+      "category": "Utility",
+      "icon": "resources/icon.png",
+      "syncDesktopName": true,
+      "artifactName": "OpenMuse-${version}-linux-${arch}.${ext}",
+      "synopsis": "A personal agent with a browser, terminal, and files",
+      "description": "OpenMuse is a personal-agent client. Connect it to your own OpenMuse server."
+    },
+    "win": {
+      "target": [
+        { "target": "nsis", "arch": ["x64"] },
+        { "target": "portable", "arch": ["x64"] }
+      ],
+      "icon": "resources/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "artifactName": "OpenMuse-${version}-windows-${arch}-setup.${ext}",
+      "shortcutName": "OpenMuse"
+    },
+    "portable": {
+      "artifactName": "OpenMuse-${version}-windows-${arch}-portable.${ext}"
+    },
+    "mac": {
+      "target": ["dmg", "zip"],
+      "category": "public.app-category.productivity",
+      "icon": "resources/icon.icns",
+      "artifactName": "OpenMuse-${version}-macos-${arch}.${ext}",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false
+    },
+    "dmg": {
+      "title": "OpenMuse ${version}"
+    }
+  }
+}

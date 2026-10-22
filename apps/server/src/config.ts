@@ -116,7 +116,8 @@ export function readConfig(): Config {
     computerImage: process.env.COMPUTER_IMAGE ?? "openmuse-computer:local",
     computerDeploymentId: process.env.COMPUTER_DEPLOYMENT_ID,
     allowedOrigins: (
-      process.env.ALLOWED_ORIGINS ?? "http://localhost:8081,http://127.0.0.1:8081"
+      process.env.ALLOWED_ORIGINS ??
+      "http://localhost:8081,http://127.0.0.1:8081,http://localhost:41737,http://127.0.0.1:41737"
     ).split(","),
   };
   if (

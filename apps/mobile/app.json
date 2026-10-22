@@ -2,18 +2,48 @@
   "expo": {
     "name": "OpenMuse",
     "slug": "openmuse",
+    "description": "A personal agent with a browser, terminal, files, and work that keeps going.",
     "scheme": "openmuse",
     "version": "0.1.0",
     "orientation": "default",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
-    "ios": { "supportsTablet": true, "bundleIdentifier": "app.openmuse.mobile" },
-    "android": { "package": "app.openmuse.mobile" },
-    "web": { "bundler": "metro", "name": "OpenMuse — a little room for everything" },
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FCFCFC"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "app.openmuse.mobile",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSAppTransportSecurity": { "NSAllowsLocalNetworking": true }
+      }
+    },
+    "android": {
+      "package": "app.openmuse.mobile",
+      "versionCode": 1,
+      "icon": "./assets/icon.png",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#EAF6FD"
+      },
+      "allowBackup": false,
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "bundler": "metro",
+      "name": "OpenMuse — a little room for everything",
+      "favicon": "./assets/favicon.png"
+    },
     "plugins": [
       "expo-document-picker",
       "@config-plugins/react-native-blob-util",
-      "@config-plugins/react-native-pdf"
+      "@config-plugins/react-native-pdf",
+      "./plugins/withCleartextTraffic"
     ]
   }
 }

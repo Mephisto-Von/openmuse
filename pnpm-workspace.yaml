@@ -1,12 +1,15 @@
 packages:
   - apps/mobile
   - apps/worker
+  - apps/desktop
 allowBuilds:
   esbuild: true
   '@biomejs/biome': true
   '@scarf/scarf': false
   '@google/genai': false
   protobufjs: false
+  electron: true
+  electron-winstaller: false
 minimumReleaseAgeExclude:
   - '@tanstack/ai-anthropic@0.18.13'
   - '@tanstack/ai-gemini@0.32.1'
