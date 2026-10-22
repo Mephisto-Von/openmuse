@@ -105,8 +105,12 @@ export async function createBrowserManager(options: {
     const list: PdfDownload[] = [];
     for (const name of await readdir(folder)) {
       if (!name.endsWith(".json")) continue;
-      const item = JSON.parse(await readFile(join(folder, name), "utf8")) as PdfDownload;
-      list.push(item);
+      // The store is scanned while a transfer can publish or clear its own metadata,
+      // so an entry that disappears or is still being written is skipped, not fatal.
+      const item = await readFile(join(folder, name), "utf8")
+        .then((text) => JSON.parse(text) as PdfDownload)
+        .catch(() => null);
+      if (item) list.push(item);
     }
     return list;
   }

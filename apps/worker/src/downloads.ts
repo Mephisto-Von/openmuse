@@ -34,7 +34,13 @@ export async function readDownloadFailures(directory: string, recoverInterrupted
   for (const name of await readdir(folder)) {
     if (!name.endsWith(".json")) continue;
     const path = join(folder, name);
-    const outcome = JSON.parse(await readFile(path, "utf8")) as Outcome;
+    // A capture clears its journal entry as soon as its metadata is published, so
+    // the file can vanish between readdir and readFile. Polling callers must not
+    // receive an error because a download finished mid-request.
+    const outcome = await readFile(path, "utf8")
+      .then((text) => JSON.parse(text) as Outcome)
+      .catch(() => null);
+    if (!outcome) continue;
     if (outcome.status === "pending" && recoverInterrupted) {
       if (await stat(join(directory, "downloads", `${outcome.id}.json`)).catch(() => null)) {
         await rm(path, { force: true });
